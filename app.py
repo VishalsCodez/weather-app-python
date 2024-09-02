@@ -24,6 +24,23 @@ def weather():
         error = "Could not retrieve weather data. Please check the city name and try again."
         return render_template('index.html', error=error)
 
+@app.route('/info')
+def info():
+    return render_template('info.html')
+
+@app.route('/location_weather', methods=['POST'])
+def location_weather():
+    latitude = request.json['latitude']
+    longitude = request.json['longitude']
+    try:
+        url = f'http://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={API_KEY}&units=metric'
+        response = requests.get(url)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching location-based weather data: {e}")
+        return jsonify({'error': 'Could not retrieve weather data'}), 500
+
 def get_weather(city):
     try:
         url = f'http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric'
@@ -39,7 +56,7 @@ def get_forecast(city):
         url = f'http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric'
         response = requests.get(url)
         response.raise_for_status()
-        return response.json()['list'][:5]
+        return response.json()['list'][:5]  # Return the first 5 entries for a 5-day forecast
     except requests.exceptions.RequestException as e:
         print(f"Error fetching forecast data: {e}")
         return []
